@@ -90,7 +90,7 @@ UTF-8, 줄마다 JSON 하나. 첫 줄은 머리말 객체 `{"bundle":"…","form
 
 ### 4.2 판정
 
-- `actor`: 판정 주체. `nvd`, `ghsa`(GHSA 공지), `pypa`, `go`, `rustsec`, `debian`, `ubuntu`, `redhat`, `rocky`, `almalinux`, `suse`, `opensuse`, … 배포판 주체의 판정은 그 배포판 묶음에, 그 밖의 주체(`nvd`와 생태계)는 `vuln` 묶음에 있습니다.
+- `actor`: 판정 주체. `nvd`, `ghsa`(GHSA 공지), `pypa`, `go`, `rustsec`, `debian`, `ubuntu`, `redhat`(Red Hat 보안 데이터 API의 CVE별 심각도), `rocky`, `almalinux`, `suse`, `opensuse`, … 배포판 주체의 판정은 그 배포판 묶음에, 그 밖의 주체(`nvd`와 생태계)는 `vuln` 묶음에 있습니다.
 - `dist`: 판정이 적용되는 배포판 판(`debian-12`, `rhel-9.0`). 주체 전체에 적용되면 빈 문자열.
 - `label`: 주체가 붙인 심각도 이름 **그대로**(소문자): `important`, `moderate`, `low`, `critical` …. 주체마다 말이 다릅니다.
 - `vector`: CVSS 벡터(v3.x·v4.0·v2). `score10`: 기본 점수×10(예: 9.8 → 98), 없거나 계산하지 못하면 -1(NVD가 준 점수를 우선, 벡터만 있는 원천은 v3.x·v2를 계산, v4.0은 계산하지 않음). `cwes`: CWE 목록.
