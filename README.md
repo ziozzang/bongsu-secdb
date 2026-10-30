@@ -57,7 +57,7 @@
 | `manifest.json` | 파일별 크기·해시, 원천 기준 시점, 뭉치기 단계별 감소 수치, 봉수 서명. 서명 봉투 한 파일(별도 `manifest.sig` 없음) |
 | `SHA256SUMS` | 위 파일들의 SHA-256 목록(`sha256sum -c`로 확인) |
 
-묶음은 `lang`(언어 생태계), `malicious`(악성 패키지), `os-apk`·`os-deb`·`os-rpm`·`os-ubuntu`(배포판), `vuln`(취약점 목록: 설명·NVD·악용 신호)입니다. `<순번>`은 발행 순번입니다. 정확한 형식은 [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md)가 정본입니다.
+묶음은 `lang`(언어 생태계), `malicious`(악성 패키지), `os-apk`·`os-deb`·`os-rpm`·`os-ubuntu`(배포판), `vuln`(취약점 목록: NVD·악용 신호), `desc`(설명 문장)입니다. `<순번>`은 발행 순번입니다. 정확한 형식은 [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md)가 정본입니다.
 
 ### 검증
 

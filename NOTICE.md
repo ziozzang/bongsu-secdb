@@ -61,7 +61,7 @@ Builder v2 fetches OSV (ecosystems below), Alpine secdb, NVD (2.0 JSON data feed
 
 - **SUSE·openSUSE**: 2021-05-12 이후에 공개된 공지만 넣습니다(그 전 공지는 CC BY-NC라 재배포할 수 없음). Only advisories published on/after 2021-05-12.
 - **Debian**: 라이선스 확인 전이므로 빌더는 기본으로 제외하고, 사람이 `--include-unverified`를 줄 때만 포함합니다. Excluded by default until the license is confirmed.
-- **NVD**: 설명 문장(300글자로 줄임)·CVSS 대표 점수·벡터·CWE를 가져옵니다. 이 자료는 NVD의 내용을 봉수 형식으로 유도·수정한 것이며 NVD 원본이 아닙니다. This product uses the NVD API but is not endorsed or certified by the NVD (data taken from the NVD 2.0 JSON data feeds).
+- **NVD**: 설명 문장(300글자로 줄임, `desc` 묶음)·CVSS 대표 점수·벡터·CWE를 가져옵니다. 이 자료는 NVD의 내용을 봉수 형식으로 유도·수정한 것이며 NVD 원본이 아닙니다. This product uses the NVD API but is not endorsed or certified by the NVD (data taken from the NVD 2.0 JSON data feeds).
 - **CISA KEV**: 등재 여부·등재일·랜섬웨어 사용 여부만 가져옵니다. CISA가 이 제품을 보증하지 않습니다. CISA does not endorse this product.
 - **FIRST EPSS**: 악용 확률과 백분위를 정수로 바꿔 담습니다. EPSS scores by FIRST.org (https://www.first.org/epss/).
 - **수정 내용 / Modifications**: 조회 키(생태계·유형, 배포판·버전, 이름, 바이너리/소스)로 다시 정리하고, 이름을 정규화(PyPI는 PEP 503, crates.io·npm·Go 등은 소문자)했습니다. CVE·GHSA·OSV·배포판 공지 ID는 같은 취약점끼리 대표 공지 하나로 묶었고(여러 CVE를 담은 묶음 공지는 합치지 않음), 같은 설명 문장과 같은 판 범위는 한 번만 담았습니다. 판정(심각도 이름·CVSS·CWE)은 판정 주체(Debian·Ubuntu·Red Hat·NVD 등)와 배포판 판마다 따로 보관하며 서로 덮어쓰지 않습니다. 본문·링크·GIT 커밋 범위는 담지 않습니다. Re-keyed and names normalised; same-vulnerability IDs merged into one representative advisory (multi-CVE bulletins are not merged); identical descriptions and version ranges stored once; judgments kept per actor and distro release without overwriting; bodies, links and commit ranges dropped; sorted and re-serialised as JSONL and SQLite.

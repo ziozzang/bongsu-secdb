@@ -9,7 +9,7 @@
 
 릴리스 태그는 `v<순번>-<UTC 날짜시각>`(예: `v42-20261031T060000Z`)입니다. 첨부 파일은 묶음마다 둘이며 데이터가 없는 묶음은 생략됩니다.
 
-묶음: `lang`(언어 생태계 규칙), `malicious`(악성 패키지 규칙), `os-apk` `os-deb` `os-rpm` `os-ubuntu`(배포판 규칙과 그 배포판 주체의 판정), `vuln`(취약점 목록: 대표 공지·별칭, 설명 문장, NVD·생태계 주체의 판정, 악용 신호. 규칙은 없음).
+묶음: `lang`(언어 생태계 규칙), `malicious`(악성 패키지 규칙), `os-apk` `os-deb` `os-rpm` `os-ubuntu`(배포판 규칙과 그 배포판 주체의 판정), `vuln`(취약점 목록: 대표 공지·별칭, NVD·생태계 주체의 판정, 악용 신호. 규칙은 없음), `desc`(설명 문장과 대표 공지에의 연결. 화면에 보일 때만 쓰므로 따로 뗐다).
 
 | 이름 | 내용 |
 |---|---|
@@ -37,7 +37,7 @@ git에는 `latest.json`(아래 3)과 문서만 커밋합니다. 데이터는 git
 | `built_at` | 빌드 시각(유닉스 초) |
 | `builder` | 빌더 이름·판 |
 | `data_license` | `CC-BY-SA-4.0` |
-| `bundles[]` | `name`, `claims`(대표 공지), `packages`(조회 키), `ranges`(공유 범위 표), `texts`(설명 문장), `judgments`, `signals`, `rules` |
+| `bundles[]` | `name`, `claims`(대표 공지), `packages`(조회 키), `ranges`(공유 범위 표), `texts`(설명 문장), `descs`(대표 공지×언어 설명 연결), `judgments`, `signals`, `rules` |
 | `files[]` | `name`, `bundle`, `kind`(`jsonl-xz`·`sqlite-zst`), `bytes`, `sha256` |
 | `sources[]` | `name`, `license`, `url`, 원문 `sha256`·`bytes`, `etag`, `last_modified`, `fetched_at`, `status`(`fresh`·`not_modified`·`stale`·`missing`) |
 | `excluded[]` | 일부러 또는 받지 못해 빠진 원천과 이유(Chainguard·Wolfi는 항상 있음) |
@@ -70,8 +70,8 @@ UTF-8, 줄마다 JSON 하나. 첫 줄은 머리말 객체 `{"bundle":"…","form
 |---|---|
 | `["c", id, modified, withdrawn, aliases, covers]` | **대표 공지**. `id`는 CVE → GHSA → 생태계 공지 순으로 고른 대표 ID. `aliases`는 같은 취약점이라고 묶인 다른 ID(원천 공지 ID 포함, 정렬). `covers`는 **묶음 공지**(CVE를 둘 이상 담은 RHSA·DSA·USN 등)일 때만 덮는 CVE 목록이고, 묶음 공지는 합치지 않고 자기 ID가 대표입니다. `modified` 유닉스 초, `withdrawn` 0/1(대표 공지의 모든 원천 레코드가 철회일 때 1) |
 | `["g", rid, range]` | **공유 범위 표**. `rid`는 0부터 이어지는 번호(범위 문자열 순서) |
-| `["h", tid, hash, text]` | **설명 문장**(`vuln` 묶음만). `tid`는 0부터(해시 순서), `hash`는 공백·대소문자·끝 마침표를 정규화한 문장의 SHA-256 앞 128비트(16진 32자). 문장은 300글자까지 |
-| `["i", id, lang, tid]` | 대표 공지의 언어별 대표 설명(`vuln` 묶음만). 대표 선택: NVD → 생태계 공지 → 배포판 공지 |
+| `["h", tid, hash, text]` | **설명 문장**(`desc` 묶음만). `tid`는 0부터(해시 순서), `hash`는 공백·대소문자·끝 마침표를 정규화한 문장의 SHA-256 앞 64비트(16진 16자). 문장은 300글자까지 |
+| `["i", id, lang, tid]` | 대표 공지의 언어별 대표 설명(`desc` 묶음만. 이 묶음에는 `c` 줄이 없고 `id`는 `vuln` 묶음의 대표 공지를 가리킨다). 대표 선택: NVD → 생태계 공지 → 배포판 공지 |
 | `["j", id, actor, dist, label, vector, score10, cwes]` | **판정**. (대표 공지, 판정 주체, 배포판 판)마다 하나, 서로 덮어쓰지 않음. 아래 4.2 |
 | `["k", kid, type, ns, dist, chan, name, by_source]` | **조회 키 표**. `kid`는 0부터(키 순서) |
 | `["r", kid, id, auth, status, scheme, rid, mask]` | **규칙**. 아래 4.1 |
@@ -108,7 +108,7 @@ UTF-8, 줄마다 JSON 하나. 첫 줄은 머리말 객체 `{"bundle":"…","form
 CREATE TABLE source(sid INTEGER PRIMARY KEY, name TEXT UNIQUE, license TEXT, url TEXT);   -- sid = mask 비트 번호
 CREATE TABLE claim(cid INTEGER PRIMARY KEY, id TEXT UNIQUE, modified INT, withdrawn INT, aliases TEXT, covers TEXT);
 CREATE TABLE descr(tid INTEGER PRIMARY KEY, hash TEXT, body TEXT);
-CREATE TABLE cdesc(cid INT, lang TEXT, tid INT, PRIMARY KEY(cid, lang)) WITHOUT ROWID;
+CREATE TABLE cdesc(claim TEXT, lang TEXT, tid INT, PRIMARY KEY(claim, lang)) WITHOUT ROWID;   -- claim = 대표 공지 ID(설명 묶음에서만 채움)
 CREATE TABLE judg(cid INT, actor TEXT, dist TEXT, label TEXT, vector TEXT, score10 INT, cwes TEXT,
                   PRIMARY KEY(cid, actor, dist)) WITHOUT ROWID;
 CREATE TABLE pkg(pid INTEGER PRIMARY KEY, type TEXT, ns TEXT, dist TEXT, chan TEXT, name TEXT, by_source INT,
@@ -123,4 +123,4 @@ CREATE TABLE signal(cid INTEGER PRIMARY KEY, kev INT, ransom INT, epss INT, pct 
 
 ## English summary
 
-Release assets per bundle: `bsdb-<bundle>-base-<n>.jsonl.xz` (canonical sorted JSONL) and `bsdb-<bundle>-<n>.sqlite.zst`, plus a signed `manifest.json` (Bongsu `SignedEnvelope`, purpose `bundle`, CJ1 canonical JSON, Ed25519) and `SHA256SUMS`. Bundles: `lang`, `malicious`, `os-apk`, `os-deb`, `os-rpm`, `os-ubuntu` (rules plus the distro's own judgments) and `vuln` (representative advisories with aliases, de-duplicated descriptions, NVD/ecosystem judgments, KEV/EPSS signals; no rules). IDs of the same vulnerability are merged into one representative advisory (CVE preferred); advisories covering two or more CVEs (RHSA/DSA/USN) are never merged and list the CVEs they cover. Judgments (severity label as the actor wrote it, CVSS vector, score×10, CWE) are stored per (advisory, actor, distro release) and never overwritten; consumers use the target distro's judgment first and fall back to NVD/GHSA, marking the substitution and its source. Version ranges, lookup keys and description texts are shared tables referenced by number. The manifest carries a chained serial (`prev_manifest_digest`), per-file size/SHA-256, per-source license/fetch receipt, the exclusion list and the merge/reduction statistics. `latest.json` is an unsigned pointer; trust comes only from verifying `manifest.json` against a pinned key.
+Release assets per bundle: `bsdb-<bundle>-base-<n>.jsonl.xz` (canonical sorted JSONL) and `bsdb-<bundle>-<n>.sqlite.zst`, plus a signed `manifest.json` (Bongsu `SignedEnvelope`, purpose `bundle`, CJ1 canonical JSON, Ed25519) and `SHA256SUMS`. Bundles: `lang`, `malicious`, `os-apk`, `os-deb`, `os-rpm`, `os-ubuntu` (rules plus the distro's own judgments) and `vuln` (representative advisories with aliases, NVD/ecosystem judgments, KEV/EPSS signals; no rules) and `desc` (de-duplicated description texts linked to the representative advisories; display-only, so a separate download). IDs of the same vulnerability are merged into one representative advisory (CVE preferred); advisories covering two or more CVEs (RHSA/DSA/USN) are never merged and list the CVEs they cover. Judgments (severity label as the actor wrote it, CVSS vector, score×10, CWE) are stored per (advisory, actor, distro release) and never overwritten; consumers use the target distro's judgment first and fall back to NVD/GHSA, marking the substitution and its source. Version ranges, lookup keys and description texts are shared tables referenced by number. The manifest carries a chained serial (`prev_manifest_digest`), per-file size/SHA-256, per-source license/fetch receipt, the exclusion list and the merge/reduction statistics. `latest.json` is an unsigned pointer; trust comes only from verifying `manifest.json` against a pinned key.
