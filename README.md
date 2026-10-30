@@ -110,3 +110,11 @@ Provided **as is**, without warranty of accuracy or completeness. This product u
 - **Code** (builder, scripts): [AGPL-3.0-only](LICENSE-CODE).
 
 Copyright Jioh Jung <ziozzang@gmail.com>
+
+---
+
+## 빌더 1판 보충 (2026-10-30 덧붙임) / Builder v1 addendum
+
+- 정확한 파일 이름·형식(묶음별 정본 `bsdb-<묶음>-base-<순번>.jsonl.xz`, `bsdb-<묶음>-<순번>.sqlite.zst`, 서명 봉투 한 파일 `manifest.json`, `SHA256SUMS`)은 [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md)가 정본입니다. 위 표의 `<날짜>`·`manifest.sig`는 개요입니다.
+- 빌더 1판의 원천은 OSV(언어 생태계 전체와 Ubuntu·Alpine·Red Hat·AlmaLinux·Rocky·SUSE·openSUSE), Alpine secdb, Debian 추적기입니다. **Debian은 라이선스 확인 전이라 기본으로 제외**하고 `--include-unverified`를 줄 때만 포함합니다. NVD·CISA KEV·EPSS는 아직 들어 있지 않습니다. 자세한 내용은 [NOTICE.md](NOTICE.md)의 덧붙임을 보세요.
+- Builder v1 reads OSV, Alpine secdb and the Debian tracker. **Debian is excluded by default** (license unverified; opt in with `--include-unverified`). NVD, CISA KEV and EPSS are not ingested yet. Exact file names and formats: [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md).
