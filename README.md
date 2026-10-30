@@ -52,9 +52,12 @@
 
 | 파일 | 설명 |
 |---|---|
-| `bsdb-<날짜>.jsonl.xz` | 정본. 정렬된 JSONL, 차이 비교와 재현이 쉬운 형식 |
-| `bsdb-<날짜>.sqlite.zst` | 바로 조회할 수 있는 SQLite |
-| `manifest.json` / `manifest.sig` | 파일별 해시, 원천 기준 시점, 봉수 서명 |
+| `bsdb-<묶음>-base-<순번>.jsonl.xz` | 정본. 정렬된 JSONL, 차이 비교와 재현이 쉬운 형식. 묶음마다 하나 |
+| `bsdb-<묶음>-<순번>.sqlite.zst` | 정본에서 만든, 바로 조회할 수 있는 SQLite. 묶음마다 하나 |
+| `manifest.json` | 파일별 크기·해시, 원천 기준 시점, 뭉치기 단계별 감소 수치, 봉수 서명. 서명 봉투 한 파일(별도 `manifest.sig` 없음) |
+| `SHA256SUMS` | 위 파일들의 SHA-256 목록(`sha256sum -c`로 확인) |
+
+묶음은 `lang`(언어 생태계), `malicious`(악성 패키지), `os-apk`·`os-deb`·`os-rpm`·`os-ubuntu`(배포판), `vuln`(취약점 목록: 설명·NVD·악용 신호)입니다. `<순번>`은 발행 순번입니다. 정확한 형식은 [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md)가 정본입니다.
 
 ### 검증
 
@@ -113,8 +116,10 @@ Copyright Jioh Jung <ziozzang@gmail.com>
 
 ---
 
-## 빌더 1판 보충 (2026-10-30 덧붙임) / Builder v1 addendum
+## 빌더 2판 보충 (2026-10-30 갱신) / Builder v2 addendum
 
-- 정확한 파일 이름·형식(묶음별 정본 `bsdb-<묶음>-base-<순번>.jsonl.xz`, `bsdb-<묶음>-<순번>.sqlite.zst`, 서명 봉투 한 파일 `manifest.json`, `SHA256SUMS`)은 [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md)가 정본입니다. 위 표의 `<날짜>`·`manifest.sig`는 개요입니다.
-- 빌더 1판의 원천은 OSV(언어 생태계 전체와 Ubuntu·Alpine·Red Hat·AlmaLinux·Rocky·SUSE·openSUSE), Alpine secdb, Debian 추적기입니다. **Debian은 라이선스 확인 전이라 기본으로 제외**하고 `--include-unverified`를 줄 때만 포함합니다. NVD·CISA KEV·EPSS는 아직 들어 있지 않습니다. 자세한 내용은 [NOTICE.md](NOTICE.md)의 덧붙임을 보세요.
-- Builder v1 reads OSV, Alpine secdb and the Debian tracker. **Debian is excluded by default** (license unverified; opt in with `--include-unverified`). NVD, CISA KEV and EPSS are not ingested yet. Exact file names and formats: [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md).
+- 파일 이름과 형식은 위 표와 [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md)가 정본입니다(형식 이름 `bsdb-2`, manifest `bongsu-secdb/2`).
+- 빌더 2판의 원천은 OSV(언어 생태계 전체와 Ubuntu·Alpine·Red Hat·AlmaLinux·Rocky·SUSE·openSUSE), Alpine secdb, **NVD(연도별 2.0 피드), CISA KEV, FIRST EPSS**입니다. **Debian은 라이선스 확인 전이라 기본으로 제외**하고 `--include-unverified`를 줄 때만 포함합니다.
+- **같은 취약점은 하나로 뭉칩니다**: CVE·GHSA·OSV·배포판 공지 ID를 별칭으로 묶어 대표 공지 하나로 두되, CVE를 둘 이상 담은 묶음 공지(RHSA·DSA 등)와 서로 다른 취약점은 합치지 않습니다. 설명 문장·버전 범위는 한 번만 저장하고 번호로 가리킵니다.
+- **판정은 주체별로 따로 보존합니다**: 같은 CVE도 Debian·Ubuntu·Red Hat·NVD가 매긴 심각도·점수가 다르므로 (공지, 판정 주체, 배포판 판)마다 따로 두고 덮어쓰지 않습니다. 조회는 해당 배포판의 판정을 먼저 쓰고, 없을 때만 NVD/GHSA 값으로 대신하며 출처를 표시합니다.
+- Builder v2 reads OSV, Alpine secdb, NVD (2.0 JSON data feeds), CISA KEV and FIRST EPSS. **Debian is excluded by default** (license unverified; opt in with `--include-unverified`). Same-vulnerability IDs are merged into one representative advisory (multi-CVE bulletins and different CVEs are never merged), and per-actor judgments (severity/CVSS per Debian/Ubuntu/Red Hat/NVD …) are stored separately and never overwritten. Exact file names and formats: [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md).
