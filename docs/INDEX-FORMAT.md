@@ -38,7 +38,7 @@ git에는 `latest.json`(아래 3)과 문서만 커밋합니다. 데이터는 git
 | `builder` | 빌더 이름·판 |
 | `edition` | `public`(이 저장소 릴리스) 또는 `local`(운영자 서버 안의 판: 재배포 금지 원천 Wolfi·Chainguard 포함, 공개 게시 금지) |
 | `data_license` | `CC-BY-SA-4.0` |
-| `bundles[]` | 한 파일 판은 `name = all` 하나: `claims`(대표 공지), `packages`(조회 키), `ranges`(공유 범위 표), `texts`(설명 문장), `descs`(대표 공지×언어 설명 연결), `judgments`, `signals`, `rules`, `cpes`(CPE 이름), `cpe_rules`, `refs`(참고 링크) |
+| `bundles[]` | 한 파일 판은 `name = all` 하나: `claims`(대표 공지), `packages`(조회 키), `ranges`(공유 범위 표), `texts`(설명 문장), `descs`(대표 공지×언어 설명 연결), `judgments`, `signals`, `rules`, `cpes`(CPE 이름), `cpe_rules`, `refs`(참고 링크), `ustates`(미고정 상태, 4.6) |
 | `files[]` | `name`, `bundle`, `kind`(`jsonl-xz`·`sqlite-zst`), `bytes`, `sha256` |
 | `sources[]` | `name`, `license`, `url`, 원문 `sha256`·`bytes`, `etag`, `last_modified`, `fetched_at`, `status`(`fresh`·`not_modified`·`stale`·`missing`) |
 | `excluded[]` | 일부러 또는 받지 못해 빠진 원천과 이유(공개판에는 Chainguard·Wolfi가 항상 있음) |
@@ -65,12 +65,12 @@ git에는 `latest.json`(아래 3)과 문서만 커밋합니다. 데이터는 git
 
 ## 4. 정본 JSONL (`bsdb-2`)
 
-UTF-8, 줄마다 JSON 하나. 첫 줄은 머리말 객체 `{"bundle":"…","format":"bsdb-2"}`이고, 나머지는 **줄 종류 글자(b < c < g < h < i < j < k < p < q < r < s < t < u) 다음 필드를 왼쪽부터** 정렬하며(숫자는 수 순서, 글은 바이트 순서) 중복이 없습니다. 어떤 줄이 가리키는 대상(대표 공지, 키, 범위, 글)은 항상 앞에 나옵니다.
+UTF-8, 줄마다 JSON 하나. 첫 줄은 머리말 객체 `{"bundle":"…","format":"bsdb-2"}`이고, 나머지는 **줄 종류 글자(b < c < g < h < i < j < k < p < q < r < s < t < u < v) 다음 필드를 왼쪽부터** 정렬하며(숫자는 수 순서, 글은 바이트 순서) 중복이 없습니다. 어떤 줄이 가리키는 대상(대표 공지, 키, 범위, 글)은 항상 앞에 나옵니다.
 
 | 줄 | 필드 |
 |---|---|
 | `["b", gid, name]` | **묶음(그룹) 이름**. 규칙·판정이 어느 쪽 것인지(`lang` `malicious` `os-apk` `os-deb` `os-rpm` `os-ubuntu` `vuln`). 한 파일 판의 `r`·`j` 줄이 `gid`로 가리킵니다 |
-| `["c", id, modified, withdrawn, aliases, covers]` | **대표 공지**. `id`는 CVE → GHSA → 생태계 공지 순으로 고른 대표 ID. `aliases`는 같은 취약점이라고 묶인 다른 ID(원천 공지 ID 포함, 정렬). `covers`는 **묶음 공지**(CVE를 둘 이상 담은 RHSA·DSA·USN 등)일 때만 덮는 CVE 목록이고, 묶음 공지는 합치지 않고 자기 ID가 대표입니다. `modified` 유닉스 초, `withdrawn` 0/1(대표 공지의 모든 원천 레코드가 철회일 때 1) |
+| `["c", id, modified, withdrawn, aliases, covers]` | **대표 공지**. `id`는 CVE → GHSA → 생태계 공지 순으로 고른 대표 ID. `aliases`는 같은 취약점이라고 묶인 다른 ID(원천 공지 ID 포함, 정렬). `covers`는 **묶음 공지**(CVE를 둘 이상 담은 RHSA·DSA·USN 등)일 때만 덮는 CVE 목록이고, 묶음 공지는 합치지 않고 자기 ID가 대표입니다. `modified` 유닉스 초, `withdrawn` 0/1(대표 공지의 모든 원천 레코드가 철회일 때, 또는 **NVD가 그 CVE를 거부(`Rejected`)했을 때** 1. 거부된 CVE는 다른 원천에 레코드가 남아 있어도 1이며, 그 CVE를 덮는 묶음 공지는 철회되지 않습니다) |
 | `["g", rid, range]` | **공유 범위 표**. `rid`는 0부터 이어지는 번호(범위 문자열 순서) |
 | `["h", tid, hash, text]` | **설명 문장**. `tid`는 0부터(해시 순서), `hash`는 공백·대소문자·끝 마침표를 정규화한 문장의 SHA-256 앞 64비트(16진 16자). 문장은 300글자까지 |
 | `["i", id, lang, tid]` | 대표 공지의 언어별 대표 설명. 대표 선택: NVD → 생태계 공지 → 배포판 공지 |
@@ -81,18 +81,20 @@ UTF-8, 줄마다 JSON 하나. 첫 줄은 머리말 객체 `{"bundle":"…","form
 | `["r", kid, id, auth, status, scheme, rid, mask, gid]` | **규칙**. 아래 4.1 |
 | `["s", idx, name, license, url]` | 이 묶음에 쓰인 원천. `idx`는 규칙 `mask`의 비트 번호 |
 | `["u", id, kind, url]` | **참고 링크**(4.5). `kind`는 `advisory`·`patch`·`report`·`web` |
+| `["v", kid, id, state, remedy, urgency]` | **미고정 상태**(4.6): 조회 키 `kid`의 대표 공지 `id` 규칙(고친 판 없음)에 배포판이 붙인 상태 |
 | `["t", id, kev_added, ransomware, epss_ppm, pct_bp]` | 악용 신호. `kev_added` KEV 등재일(유닉스 초, 없으면 0), `ransomware` 0/1, `epss_ppm` EPSS 확률×10⁶, `pct_bp` 백분위×10⁴ |
 
 ### 4.1 규칙
 
-- 조회 키 `type`(purl 유형: `deb rpm apk pypi npm cargo golang maven nuget gem composer hex pub cran hackage julia opam swift githubactions`), `ns`(네임스페이스: 배포판 이름, npm `@scope`, Maven groupId …), `dist`(`debian-12`, `ubuntu-22.04`, `alpine-3.20`, `rhel-9`·`rhel-9.0`, `almalinux-8`, `rocky-9`, `sles-15.3`, `opensuse-leap-15.5`; 언어는 빈 문자열), `chan`(채널: `baseos`, `rhel_eus/baseos`, `pro` …), `name`(정규화한 이름: PyPI는 PEP 503, crates.io는 소문자와 `_`→`-`, npm·Go·Packagist·NuGet·Swift·GitHub Actions는 소문자, 배포판 패키지는 그대로), `by_source`(0 바이너리 이름, 1 소스 패키지 이름).
+- 조회 키 `type`(purl 유형: `deb rpm apk pypi npm cargo golang maven nuget gem composer hex pub cran hackage julia opam swift githubactions`), `ns`(네임스페이스: 배포판 이름, npm `@scope`, Maven groupId …), `dist`(`debian-12`, `ubuntu-22.04`, `alpine-3.20`, `rhel-9`·`rhel-9.0`(RHEL 본체와 EUS 등 부가 채널만. OpenStack·OpenShift·Satellite·JBoss·Hummingbird 같은 다른 Red Hat 제품은 `<제품>-<판>`: `openstack-18.0`, `hummingbird-1`, 채널에 `el9` 등), `almalinux-8`, `rocky-9`, `sles-15.3`, `opensuse-leap-15.5`; 언어는 빈 문자열), `chan`(채널: `baseos`, `rhel_eus/baseos`, `pro` …), `name`(정규화한 이름: PyPI는 PEP 503, crates.io는 소문자와 `_`→`-`, npm·Go·Packagist·NuGet·Swift·GitHub Actions는 소문자, 배포판 패키지는 그대로), `by_source`(0 바이너리 이름, 1 소스 패키지 이름).
 - `auth`: `d` 배포판 공지 / `e` 생태계 공지. 패키지 관리자가 설치한 것은 `d`만, 언어 lock에서 나온 것은 `e`만 씁니다.
 - `status`: `a` 범위 안이면 영향 / `n` 판과 무관하게 영향 없음(범위는 `i0`).
 - `scheme`: `deb rpm apk semver pep440 go maven`은 비교기가 있고, `gem nuget composer cran hackage opam actions`는 범위만 담습니다. `nvd`(코드 14)는 CPE 규칙(4.4)의 범위 전용입니다.
 - `gid`: 규칙이 속한 묶음 번호(`b` 줄). 같은 규칙을 여러 묶음이 말하면 하나로 합치고 가장 작은 번호를 둡니다. 노드는 배포판 규칙에 같은 배포판 묶음(`os-*`)의 판정만 씁니다.
 - 범위(`g` 줄): 이벤트를 `|`로 잇고 **정렬해 둡니다** — `i<판>` 들어옴, `f<판>` 고침, `l<판>` 마지막 영향, `m<판>` 한계(`i0`은 처음부터. Go는 판에 `v`를 붙이므로 `iv0`가 처음부터이고 `v0`로 바로 비교하면 안 됩니다). 예: `i0|f1:3.0.1-47.el9_1`. 구간이 여럿이면 이벤트 순서와 무관하게 "시작 뒤 가장 가까운 끝점"으로 계산합니다. 정확판 목록은 `=판1,판2`(범위가 하나도 없을 때만, 정렬). rpm 판은 `epoch:version-release`이며 설치 판에 epoch가 없으면 판정하지 않고 "모름"입니다. Go 판은 `v` 접두를 붙입니다.
+- 배포판 범위의 시작판이 고친 판보다 높으면(OSV Alpine이 상류의 다른 계열 시작판과 Alpine 고친 판을 합친 `i2.67.0|f2.66.6-r0` 같은 것) 배포판 고친 판 기준 `i0|f2.66.6-r0`으로 바로잡아 둡니다(`manifest.reduction.ranges_inverted_fixed`).
 - `mask`: 이 규칙을 말한 원천들의 비트 집합(`s` 줄의 `idx`). 같은 규칙을 여러 원천이 말하면 하나로 합치고 마스크를 OR합니다.
-- 같은 (키, 대표 공지)에서 "영향"과 "영향 없음"이 함께 나오면 원천 우선순위가 높은 쪽만 남깁니다: 배포판 자체 추적기(Debian 보안 추적기·Alpine secdb) > 배포판 OSV 변환본 > 언어 생태계 OSV. 같은 순위면 "영향"이 이깁니다. 버려진 쪽은 `manifest.reduction.conflicts`에 개수로 남습니다.
+- 같은 (키, 대표 공지)에서 "영향"과 "영향 없음"이 함께 나오면 원천 우선순위가 높은 쪽만 남깁니다: 배포판 자체 추적기(Debian 보안 추적기·Alpine secdb·Red Hat CSAF VEX) > 배포판 OSV 변환본 > 언어 생태계 OSV. 같은 순위면 "영향"이 이깁니다. 버려진 쪽은 `manifest.reduction.conflicts`에 개수로 남습니다.
 
 ### 4.2 판정
 
@@ -114,6 +116,7 @@ UTF-8, 줄마다 JSON 하나. 첫 줄은 머리말 객체 `{"bundle":"…","form
 
 - `vulnerable: true`인 항목만, `negate` 노드는 뺍니다. AND 구성도 취약한 쪽 CPE만 규칙이 됩니다.
 - part는 `a`·`o`만(하드웨어 `h` 제외). `vulnStatus = Rejected`인 CVE는 뺍니다.
+- NVD가 아직 분석하지 않아 적용 조건이 비어 있는 CVE(Awaiting Analysis·Deferred 등)는 **Anchore `nvd-data-overrides`**(CC0-1.0, NVD와 같은 모양)의 적용 조건으로 같은 규칙을 만들고, 원천 비트가 `anchore-nvd-overrides`입니다. NVD가 적용 조건을 붙인 CVE는 NVD 것만 씁니다.
 - 범위(판 체계는 늘 `nvd`): `versionStartIncluding` → `i<판>`, **`versionStartExcluding` → `e<판>`**(새 이벤트 글자: 그 판은 빼고 그 뒤부터), `versionEndExcluding` → `f<판>`, `versionEndIncluding` → `l<판>`. 시작이 없으면 `i0`.
 - 범위 없이 판이 정해진 CPE(`…:python:python:3.11.4:*…`)는 같은 (CPE, 공지, tsw)끼리 모아 정확판 목록 `=판1,판2`(정렬). update 칸이 `*`·`-`가 아니면 `판-update`(`3.13.0-rc1`)로 적습니다. 판이 `*`이고 범위가 없으면 `i0`(모든 판), 판이 `-`(해당 없음)이면 규칙을 만들지 않습니다.
 - `tsw`는 CPE의 target_sw 칸 그대로(`*`, `-`, `linux`, `windows`, `node.js`, `wordpress` …). 노드는 `*`·`-`·빈 값·`linux`만 씁니다.
@@ -125,6 +128,21 @@ UTF-8, 줄마다 JSON 하나. 첫 줄은 머리말 객체 `{"bundle":"…","form
 ### 4.5 참고 링크 (`u`)
 
 대표 공지마다 `(kind, url)`을 중복 없이 둡니다. 종류: OSV `references[].type`의 ADVISORY→`advisory`, FIX→`patch`, REPORT→`report`, 나머지→`web`. NVD `references[].tags`의 Vendor Advisory·Third Party Advisory·US Government Resource→`advisory`, Patch→`patch`, Issue Tracking→`report`, 나머지→`web`(태그가 여럿이면 앞선 종류). 같은 주소는 가장 앞선 종류(`advisory` < `patch` < `report` < `web`)로 한 번만, 대표 공지마다 최대 40개를 종류 순서로 남깁니다. `http(s)`가 아니거나 512바이트를 넘는 주소는 버립니다.
+
+### 4.6 미고정 상태 (`v`, SQLite `ustate`)
+
+고친 판이 없는 "영향" 규칙(`i0`)에 배포판이 붙인 상태를 그대로 싣습니다. 규칙(영향 여부)은 그대로이고, 노드는 이 값으로 「영향 미정」을 따로 세거나 우선순위를 낮출 수 있습니다. (키, 대표 공지)마다 하나이며, 같은 (키, 대표 공지)에 "영향" 규칙이 있을 때만 있습니다. 규칙과는 `(pid, cid)`로 잇습니다.
+
+| 원천(키의 `ns`) | `state` | `remedy` | `urgency` |
+|---|---|---|---|
+| Debian 보안 추적기(`debian`) | `open`(영향 있음, 아직 안 고침), `undetermined`(영향 여부 미정) | 빈 값 | 추적기 값 그대로(소문자): `unimportant`, `low`, `medium`, `high`, `not yet assigned`, `end-of-life` |
+| Red Hat CSAF VEX(`redhat`) | `known_affected`(영향 있음), `under_investigation`(조사 중) | `fix_deferred`(고침 미룸), `none_available`(아직 고친 것 없음), `will_not_fix`(고치지 않음), `out_of_support_scope`(지원 범위 밖), `no_fix_planned`(그 밖의 계획 없음), 빈 값 | 빈 값 |
+
+권장 읽기: `undetermined`·`under_investigation`은 「영향 미정」으로 따로 셉니다. `urgency = unimportant`는 낮은 우선순위로 표시합니다. `remedy`는 그대로 보입니다. 이 표가 없는 파일(4단계 전)은 모두 「상태 없음」입니다.
+
+Red Hat 미고정 규칙의 범위: RHEL 본체(`cpe:/o:redhat:enterprise_linux:N`)의 rpm 패키지만 `rhel-N` 키(채널 없음)로 넣습니다. 다른 제품·컨테이너 이미지·Maven 구성요소, RHEL 8 모듈 스트림 패키지(`rpmmod=`)는 넣지 않습니다.
+
+Debian 임시 번호: CVE가 없는 Debian 추적기 항목(`TEMP-…`)은 그 번호가 대표 공지 ID입니다(규칙·설명·추적기 링크·긴급도 판정). 대부분 낮은 중요도이므로 접두 `TEMP-`로 낮은 우선순위를 표시할 수 있습니다.
 
 ## 5. SQLite
 
@@ -147,10 +165,11 @@ CREATE TABLE signal(cid INTEGER PRIMARY KEY, kev INT, ransom INT, epss INT, pct 
 CREATE TABLE aref(claim TEXT, kind TEXT, url TEXT, PRIMARY KEY(claim, kind, url)) WITHOUT ROWID;   -- 참고 링크(4.5)
 CREATE TABLE cpe(cpid INTEGER PRIMARY KEY, part TEXT, vendor TEXT, product TEXT, UNIQUE(part, vendor, product));   -- 4.4
 CREATE TABLE cpe_rule(cpid INT, cid INT, rid INT, tsw TEXT, mask INT, PRIMARY KEY(cpid, cid, rid, tsw)) WITHOUT ROWID;
+CREATE TABLE ustate(pid INT, cid INT, state TEXT, remedy TEXT, urgency TEXT, PRIMARY KEY(pid, cid)) WITHOUT ROWID;   -- 4.6
 ```
 
 `aliases`·`covers`·`cwes`는 쉼표로 이은 글입니다. 정수 코드: `auth` 0 배포판·1 생태계, `status` 0 영향·1 영향 없음, `scheme` 0 deb·1 rpm·2 apk·3 semver·4 pep440·5 go·6 maven·7 gem·8 nuget·9 composer·10 cran·11 hackage·12 opam·13 actions·14 nvd.
 
 ## English summary
 
-Release assets: ONE file `bsdb-<n>.sqlite.zst` (queryable SQLite) and its canonical sorted JSONL `bsdb-<n>.jsonl.xz` (no per-bundle split files), plus a signed `manifest.json` (Bongsu `SignedEnvelope`, purpose `bundle`, CJ1 canonical JSON, Ed25519) and `SHA256SUMS`. The single file holds the former bundles as groups (`grp` table): `lang`, `malicious`, `os-apk`, `os-deb`, `os-rpm`, `os-ubuntu` (rules plus the distro's own judgments) and `vuln` (representative advisories with aliases, NVD/ecosystem judgments, KEV/EPSS signals), plus de-duplicated descriptions with typed reference links and the NVD CPE rule tables (`cpe`, `cpe_rule`; `nvd` version scheme, `e` event = start excluding) used to judge binaries that belong to no package. `manifest.edition` is `public` for releases here and `local` for an operator's own build (which also includes Wolfi/Chainguard and must not be published). IDs of the same vulnerability are merged into one representative advisory (CVE preferred); advisories covering two or more CVEs (RHSA/DSA/USN) are never merged and list the CVEs they cover. Judgments (severity label as the actor wrote it, CVSS vector, score×10, CWE) are stored per (advisory, actor, distro release) and never overwritten; consumers use the target distro's judgment first and fall back to NVD/GHSA, marking the substitution and its source. Version ranges, lookup keys and description texts are shared tables referenced by number. The manifest carries a chained serial (`prev_manifest_digest`), per-file size/SHA-256, per-source license/fetch receipt, the exclusion list and the merge/reduction statistics. `latest.json` is an unsigned pointer; trust comes only from verifying `manifest.json` against a pinned key.
+Release assets: ONE file `bsdb-<n>.sqlite.zst` (queryable SQLite) and its canonical sorted JSONL `bsdb-<n>.jsonl.xz` (no per-bundle split files), plus a signed `manifest.json` (Bongsu `SignedEnvelope`, purpose `bundle`, CJ1 canonical JSON, Ed25519) and `SHA256SUMS`. The single file holds the former bundles as groups (`grp` table): `lang`, `malicious`, `os-apk`, `os-deb`, `os-rpm`, `os-ubuntu` (rules plus the distro's own judgments) and `vuln` (representative advisories with aliases, NVD/ecosystem judgments, KEV/EPSS signals), plus de-duplicated descriptions with typed reference links and the NVD CPE rule tables (`cpe`, `cpe_rule`; `nvd` version scheme, `e` event = start excluding; CVEs NVD has not analysed yet are filled from Anchore `nvd-data-overrides`, CC0) used to judge binaries that belong to no package. Unfixed rules carry the distribution's own state in `ustate` (Debian tracker `open`/`undetermined` + urgency; Red Hat CSAF VEX `known_affected`/`under_investigation` + remediation such as `fix_deferred`/`will_not_fix`). CVEs rejected by NVD are marked `withdrawn = 1` even if another source still lists them. `manifest.edition` is `public` for releases here and `local` for an operator's own build (which also includes Wolfi/Chainguard and must not be published). IDs of the same vulnerability are merged into one representative advisory (CVE preferred); advisories covering two or more CVEs (RHSA/DSA/USN) are never merged and list the CVEs they cover. Judgments (severity label as the actor wrote it, CVSS vector, score×10, CWE) are stored per (advisory, actor, distro release) and never overwritten; consumers use the target distro's judgment first and fall back to NVD/GHSA, marking the substitution and its source. Version ranges, lookup keys and description texts are shared tables referenced by number. The manifest carries a chained serial (`prev_manifest_digest`), per-file size/SHA-256, per-source license/fetch receipt, the exclusion list and the merge/reduction statistics. `latest.json` is an unsigned pointer; trust comes only from verifying `manifest.json` against a pinned key.
