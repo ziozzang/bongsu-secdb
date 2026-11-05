@@ -1,5 +1,11 @@
 # NOTICE — 데이터 출처와 표기 / Data sources and attribution
 
+## 첫 운영 공개판 (2026-11-05)
+
+현재 공개판은 [data-20261105-12](https://github.com/ziozzang/bongsu-secdb/releases/tag/data-20261105-12)입니다. Debian을 포함한 공개 원천 54개를 사용합니다. Root·TuxCare·Seal·Red Hat Lightwell은 수정 노드 배포 전까지 공개판에서 제외하며, 기존 로컬판 전용 원천도 제외합니다. 정확한 원천 이름·출처·건수·제외 사유는 릴리스 설명과 서명 manifest를 참조하세요.
+
+본 자료에 공지·판정·제품 번호(CPE) 범위·설명·링크를 담고, 선택 부록에는 전체 설명·완화·조치도 담습니다. 원천별 결론을 하나로 덮어쓰지 않습니다. 아래 원천 표의 출처 표기는 계속 적용하며, 맨 아래 빌더 2판 절은 과거 기록입니다.
+
 이 저장소의 릴리스 자산(데이터)은 아래 공개 자료에서 유도·수정한 것입니다. 봉수 형식으로 정규화하고 필드를 줄였으므로 **원본 그대로가 아닙니다.**
 Release assets are derived from and modified versions of the sources below; they are **not** the original data.
 
@@ -43,7 +49,7 @@ CISA KEV 자료를 사용하지만 CISA가 이 제품을 보증하지 않습니�
 자료는 있는 그대로 제공되며, 정확성·완전성·특정 목적 적합성을 보증하지 않습니다.
 Provided "as is", without warranty of any kind.
 
-## 빌더 2판이 실제로 쓰는 원천과 수정 내용 (2026-10-30 갱신) / Sources actually used by builder v2
+## 과거 빌더 2판의 기록 (2026-10-30) — 아래 설명은 현재 공개판의 계약이 아닙니다
 
 위 표 중 빌더 2판이 받는 것은 **OSV(아래 생태계), Alpine secdb, NVD(연도별 2.0 JSON 피드), Red Hat 보안 데이터 API, CISA KEV, FIRST EPSS**이고, Debian 보안 추적기·OSV는 받아 두지만 라이선스 확인 전이라 공개판에서 기본으로 제외합니다.
 Builder v2 fetches OSV (ecosystems below), Alpine secdb, NVD (2.0 JSON data feeds), CISA KEV and FIRST EPSS. The Debian tracker/OSV are fetched but excluded from the published data until the license is confirmed.
@@ -67,3 +73,5 @@ Builder v2 fetches OSV (ecosystems below), Alpine secdb, NVD (2.0 JSON data feed
 - **FIRST EPSS**: 악용 확률과 백분위를 정수로 바꿔 담습니다. EPSS scores by FIRST.org (https://www.first.org/epss/).
 - **수정 내용 / Modifications**: 조회 키(생태계·유형, 배포판·버전, 이름, 바이너리/소스)로 다시 정리하고, 이름을 정규화(PyPI는 PEP 503, crates.io·npm·Go 등은 소문자)했습니다. CVE·GHSA·OSV·배포판 공지 ID는 같은 취약점끼리 대표 공지 하나로 묶었고(여러 CVE를 담은 묶음 공지는 합치지 않음), 같은 설명 문장과 같은 판 범위는 한 번만 담았습니다. 판정(심각도 이름·CVSS·CWE)은 판정 주체(Debian·Ubuntu·Red Hat·NVD 등)와 배포판 판마다 따로 보관하며 서로 덮어쓰지 않습니다. 본문·링크·GIT 커밋 범위는 담지 않습니다. Re-keyed and names normalised; same-vulnerability IDs merged into one representative advisory (multi-CVE bulletins are not merged); identical descriptions and version ranges stored once; judgments kept per actor and distro release without overwriting; bodies, links and commit ranges dropped; sorted and re-serialised as JSONL and SQLite.
 - 원천 파일마다 받은 시각·SHA-256·ETag가 서명된 `manifest.json`에 기록됩니다. Per-source fetch time, SHA-256 and ETag are recorded in the signed `manifest.json`.
+
+Copyright Jioh L. Jung <jung@jioh.net>

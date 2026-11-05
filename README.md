@@ -1,125 +1,28 @@
-# bongsu-secdb
+# bongsu-secdb — 봉수 공개 취약점 자료
 
-[한국어](#한국어) · [English](#english)
+봉수 자산 점검 도구가 사용하는 취약점 데이터베이스입니다. 공개 원천의 공지·배포판별 판정·악용 신호를 모아 정본과 SQLite로 제공합니다.
 
----
+첫 운영 공개판: [data-20261105-12](https://github.com/ziozzang/bongsu-secdb/releases/tag/data-20261105-12). 원천 54개, 대표 공지 737,010건, 판정 규칙 7,577,196개입니다. 원천 목록·건수·받은 시각·빠진 원천은 릴리스 설명과 서명 manifest에 있습니다.
 
-## 한국어
+공급사 공지를 일반 패키지에 붙이는 오류를 피하려고 Root·TuxCare·Seal·Red Hat Lightwell은 수정 노드 배포 전까지 공개판에서 뺐습니다. 기존 로컬판 전용 원천도 공개하지 않습니다. Debian을 포함한 나머지 공개 원천을 사용합니다.
 
-**봉수(Bongsu) 자산 점검 도구에 맞춰 만든 취약점 데이터베이스**입니다.
-공개된 취약점 자료를 모아, 봉수가 실제로 판정에 쓰는 정보만 남기고 압축해 배포합니다.
-
-> 상태: **준비 중.** 빌드 도구와 첫 공개판을 만들고 있습니다. 아직 내려받을 수 있는 릴리스가 없습니다.
-
-### 무엇이 다른가
-
-같은 이름이라도 대상이 다르면 다른 취약점이 붙습니다. 이 데이터베이스는 그 차이를 구분합니다.
-
-- **이름이 같아도 다른 대상**: `curl`이 PyPI 패키지인지, 배포판 패키지(rpm/deb)인지, 디스크의 실행 파일인지 구분합니다. 조회 키는 생태계·유형, 배포판·버전, 패키지 이름, 실행 파일이면 경로와 소속 패키지입니다.
-- **배포판 백포트**: RHEL 같은 배포판은 원래 버전 번호를 그대로 두고 보안 수정만 가져옵니다. 그래서 원래 프로그램 버전이 아니라 배포판 보안 공지의 "고쳐진 릴리스 번호(`epoch:version-release`)"와 "영향 없음" 판정으로 비교합니다.
-- **크기**: 공개 원본보다 훨씬 작습니다(시제품 측정: 대표 8개 생태계 396 MB → 7~24 MB).
-
-### 데이터 출처
-
-| 원천 | 내용 | 라이선스 |
-|---|---|---|
-| [OSV](https://osv.dev) — npm, PyPI, Go, crates.io, Maven, NuGet, RubyGems, Packagist, Hex, Pub | 언어 생태계 취약점 | CC BY 4.0 (GHSA·PyPA 등), RustSec CC0 1.0, OpenSSF 악성 패키지 Apache-2.0 |
-| [GitHub Advisory Database](https://github.com/advisories) | 공지 원본 | CC BY 4.0 |
-| Ubuntu (OSV) | 배포판 공지 | **CC BY-SA 4.0** |
-| Alpine (OSV, secdb) | 배포판 공지 | **CC BY-SA 4.0** |
-| Red Hat (OSV, VEX) | 배포판 공지·영향 판정 | CC BY 4.0 |
-| SUSE / openSUSE (OSV, CSAF) | 배포판 공지 | CC BY 4.0 |
-| AlmaLinux (OSV) | 배포판 공지 | MIT |
-| Rocky Linux (OSV) | 배포판 공지 | BSD |
-| Debian (OSV, 보안 추적기) | 배포판 공지·영향 없음 판정 | 라이선스 확인 중 — 확인되기 전에는 공개판에 넣지 않습니다 |
-| [NVD](https://nvd.nist.gov) | CVE 세부 정보 | 미국 정부 자료 (아래 고지 참고) |
-| [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) | 실제 악용 확인 목록 | CC0 1.0 |
-| [EPSS](https://www.first.org/epss/) | 악용 가능성 점수 | 무료, 출처 표기 |
-
-**넣지 않는 원천**: Chainguard·Wolfi(CC BY-NC-ND 4.0, 변형물 재배포 금지).
-
-원천별 자세한 출처와 표기 문구는 [NOTICE.md](NOTICE.md)에 있습니다.
-
-### 갱신 주기
-
-- **6시간마다** 자동으로 받기 → 정규화 → 빌드 → 서명 → 검증 → 게시합니다.
-- 어느 단계든 실패하면 새 판을 게시하지 않고 **이전 판을 그대로 둡니다.**
-- 판마다 만든 시각(UTC)과 원천별 기준 시점이 manifest에 적힙니다.
-
-### 받는 것
-
-릴리스 자산으로 배포합니다(git 이력에는 작은 색인과 문서만 둡니다).
-
-| 파일 | 설명 |
+| 자산 | 내용 |
 |---|---|
-| `bsdb-<묶음>-base-<순번>.jsonl.xz` | 정본. 정렬된 JSONL, 차이 비교와 재현이 쉬운 형식. 묶음마다 하나 |
-| `bsdb-<묶음>-<순번>.sqlite.zst` | 정본에서 만든, 바로 조회할 수 있는 SQLite. 묶음마다 하나 |
-| `manifest.json` | 파일별 크기·해시, 원천 기준 시점, 뭉치기 단계별 감소 수치, 봉수 서명. 서명 봉투 한 파일(별도 `manifest.sig` 없음) |
-| `SHA256SUMS` | 위 파일들의 SHA-256 목록(`sha256sum -c`로 확인) |
+| `bsdb-1.jsonl.xz` | 정렬된 정본 |
+| `bsdb-1.sqlite.zst` | 같은 내용의 조회용 SQLite |
+| `bsdb-1-appendix.*` | 전체 설명·완화·조치의 선택 부록 |
+| `manifest.json` | 원천·건수·파일 지문과 Ed25519 서명 봉투 |
+| `SHA256SUMS` | 자료 파일과 manifest의 SHA-256 |
+| `bongsu-secdb.pub` | 운영 공개키 |
 
-묶음은 `lang`(언어 생태계), `malicious`(악성 패키지), `os-apk`·`os-deb`·`os-rpm`·`os-ubuntu`(배포판), `vuln`(취약점 목록: NVD·악용 신호), `desc`(설명 문장)입니다. `<순번>`은 발행 순번입니다. 정확한 형식은 [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md)가 정본입니다.
+공개키와 고정 방법은 [trust/](trust/README.md)에 있습니다. 공개키 32바이트 SHA-256은 `6f94eeff71eef8a9fc1440299f010b139230786aa5fd89094b0a39789d3fbf28`입니다. 저장소 밖 경로로도 대조해 키를 고정하세요. `test-*`는 시험 키로 만든 과거 시험판입니다.
 
-### 검증
+```sh
+bongsu-secdb-build verify --dir ./자료폴더 --pubkey "$(cat ./자료폴더/bongsu-secdb.pub)" --cases
+```
 
-봉수 서명 형식(정규 JSON CJ1 + Ed25519 + SHA-256)으로 서명합니다. 봉수 서버는 처음 한 번 등록한 공개 키로 서명을 확인한 뒤에만 받아들입니다. 공개 키 지문은 첫 릴리스 때 이 문서에 적습니다.
+정기 실행 설정은 하루 두 번(KST 05:30·17:30)이며 운영 자동화 PR 검토 중입니다. 실제 설치 전에는 자동 갱신이 보장되지 않습니다. 검증에 실패하면 새 자료를 게시하지 않습니다.
 
-### 고지
+데이터: [CC BY-SA 4.0](LICENSE-DATA). 빌더 코드: [AGPL-3.0-only](LICENSE-CODE). [원천 출처와 표기](NOTICE.md). 각 원천의 자료를 봉수 형식으로 변환했으며 원천 제공자의 보증·인증을 뜻하지 않습니다.
 
-- 이 자료는 **있는 그대로** 제공되며 정확성·완전성을 보증하지 않습니다. 보안 판단의 유일한 근거로 쓰지 마십시오.
-- 이 제품은 NVD API를 사용하지만 NVD가 보증하거나 인증하지 않았습니다. NVD 내용은 봉수 형식으로 **유도·수정**했으므로 NVD 원본으로 표시하지 않습니다.
-- CISA KEV 자료를 쓰지만 CISA가 이 제품을 보증하지 않습니다.
-- 각 원천의 상표와 권리는 해당 소유자에게 있습니다.
-
-### 라이선스
-
-- **데이터**(릴리스 자산): [CC BY-SA 4.0](LICENSE-DATA). Ubuntu·Alpine 자료(CC BY-SA 4.0)를 포함하므로 묶음 전체가 같은 조건을 따릅니다. 원천별 표기는 [NOTICE.md](NOTICE.md).
-- **코드**(빌드 도구·스크립트): [AGPL-3.0-only](LICENSE-CODE).
-
-Copyright Jioh Jung <ziozzang@gmail.com>
-
----
-
-## English
-
-A **vulnerability database tailored to the Bongsu asset-inspection tool.** It collects public advisory data, keeps only what Bongsu actually uses for matching, and ships it compressed.
-
-> Status: **in preparation.** The builder and first public release are being made. No downloadable release yet.
-
-### What is different
-
-- **Same name, different target**: distinguishes `curl` the PyPI package, the distro package (rpm/deb), and the binary on disk. Lookup key = ecosystem/type, distro + release, package name, and (for binaries) path and owning package.
-- **Distro backports**: compares against the distro advisory's fixed `epoch:version-release` and "not affected" verdicts, not the upstream version.
-- **Size**: much smaller than the raw sources (prototype: 8 ecosystems 396 MB → 7–24 MB).
-
-### Sources
-
-See the table above and [NOTICE.md](NOTICE.md). Chainguard and Wolfi (CC BY-NC-ND 4.0) are **excluded**. Debian is included only after its license is confirmed.
-
-### Update schedule
-
-Built automatically **every 6 hours**: fetch → normalize → build → sign → verify → publish. If any step fails, nothing is published and the previous release stays.
-
-### Files
-
-Release assets: canonical sorted JSONL (`.jsonl.xz`), ready-to-query SQLite (`.sqlite.zst`), and a signed `manifest.json`. Signed with Bongsu's format (canonical JSON CJ1 + Ed25519 + SHA-256); the public-key fingerprint will be listed here with the first release.
-
-### Disclaimer
-
-Provided **as is**, without warranty of accuracy or completeness. This product uses the NVD API but is not endorsed or certified by the NVD; NVD content has been derived and modified. CISA does not endorse this product.
-
-### License
-
-- **Data** (release assets): [CC BY-SA 4.0](LICENSE-DATA) — includes CC BY-SA 4.0 sources (Ubuntu, Alpine). Per-source attribution in [NOTICE.md](NOTICE.md).
-- **Code** (builder, scripts): [AGPL-3.0-only](LICENSE-CODE).
-
-Copyright Jioh Jung <ziozzang@gmail.com>
-
----
-
-## 빌더 2판 보충 (2026-10-30 갱신) / Builder v2 addendum
-
-- 파일 이름과 형식은 위 표와 [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md)가 정본입니다(형식 이름 `bsdb-2`, manifest `bongsu-secdb/2`).
-- 빌더 2판의 원천은 OSV(언어 생태계 전체와 Ubuntu·Alpine·Red Hat·AlmaLinux·Rocky·SUSE·openSUSE), Alpine secdb, **NVD(연도별 2.0 피드), Red Hat 보안 데이터 API(CVE별 심각도), CISA KEV, FIRST EPSS**입니다. **Debian은 라이선스 확인 전이라 기본으로 제외**하고 `--include-unverified`를 줄 때만 포함합니다.
-- **같은 취약점은 하나로 뭉칩니다**: CVE·GHSA·OSV·배포판 공지 ID를 별칭으로 묶어 대표 공지 하나로 두되, CVE를 둘 이상 담은 묶음 공지(RHSA·DSA 등)와 서로 다른 취약점은 합치지 않습니다. 설명 문장·버전 범위는 한 번만 저장하고 번호로 가리킵니다.
-- **판정은 주체별로 따로 보존합니다**: 같은 CVE도 Debian·Ubuntu·Red Hat·NVD가 매긴 심각도·점수가 다르므로 (공지, 판정 주체, 배포판 판)마다 따로 두고 덮어쓰지 않습니다. 조회는 해당 배포판의 판정을 먼저 쓰고, 없을 때만 NVD/GHSA 값으로 대신하며 출처를 표시합니다.
-- Builder v2 reads OSV, Alpine secdb, NVD (2.0 JSON data feeds), the Red Hat Security Data API (per-CVE severity), CISA KEV and FIRST EPSS. **Debian is excluded by default** (license unverified; opt in with `--include-unverified`). Same-vulnerability IDs are merged into one representative advisory (multi-CVE bulletins and different CVEs are never merged), and per-actor judgments (severity/CVSS per Debian/Ubuntu/Red Hat/NVD …) are stored separately and never overwritten. Exact file names and formats: [docs/INDEX-FORMAT.md](docs/INDEX-FORMAT.md).
+Copyright Jioh L. Jung <jung@jioh.net>
